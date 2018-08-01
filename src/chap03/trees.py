@@ -31,3 +31,27 @@ def createDataSet():
     labels = ['no surfacing', 'flippers']
     return dataSet, labels
 
+'''
+    按照特征划分数据集
+    dataSet：待划分的数据集，比如上面的dataSet
+    axis：划分数据集的特征——其实是特征在特征向量中的下标位置
+    value：需要返回的特征的值——其实是预期匹配到的特征值
+'''
+def splitDataSet(dataSet, axis, value):
+    retDataSet = []
+    for featVec in dataSet:
+        if featVec[axis] == value:
+            reducedFeatVec = featVec[: axis]
+            reducedFeatVec.extend(featVec[axis+1 :])
+            retDataSet.append(reducedFeatVec)
+    return retDataSet
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        

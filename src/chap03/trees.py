@@ -153,10 +153,13 @@ def classify(inputTree, featLabels, testVec):
     secondDict = inputTree[firstStr]
     featIndex = featLabels.index(firstStr)
     for key in secondDict.keys():
+        # 特征向量的指定标量值和树的某个节点标签值匹配
         if testVec[featIndex] == key:
+            # 如果此节点是一个字典，即是一棵子树，需要递归匹配
             if type(secondDict[key]).__name__ == 'dict':
                 classLabel = classify(secondDict[key], featLabels, testVec)
             else:
+                # 反之，直接返回节点的值即可
                 classLabel = secondDict[key]
     return classLabel
     

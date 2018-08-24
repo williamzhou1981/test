@@ -66,9 +66,9 @@ def setOfWords2Vec(vocabList, inputSet):
                 可以简单的通过各类文档数除以文档总数来获得p(c_i)
             w是setOfWords2Vec方法生成的文档向量
                 直接计算比较复杂，可以利用贝叶斯假设
-                    即每个向量的分量彼此独立
-                    p(w | c_i) = Πp(w_i | c_i)
-                    这样简化计算过程
+                    即每个向量的分量彼此独立，每个分量可以单独参与计算，如下
+                    p(w | c_i) = [p(w_0 | c_i),....p(w_n | c_i)]
+                    这样简化计算过程，当然最后还是以向量的形式进行展示
             p(w)直接用文档本身数量除以文档总数即可
         本方法就是通过已有材料训练得出这几个参数值
     trainMatrix：把setOfWords2Vec当中产生的数字向量都放到一个列表中形成的矩阵
@@ -80,18 +80,21 @@ def trainNB0(trainMatrix, trainCategory):
     numWords = len(trainMatrix[0])
     # 侮辱性文档比例，反着看就是非侮辱性文档比例
     pAbusive = sum(trainCategory) / float(numTrainDocs)
-    # 
+    
     p0Num = zeros(numWords)
     p1Num = zeros(numWords)
     p0Denom = 0.0
     p1Denom = 0.0
-    for i in range(numTrainDocs):
+    for i in range(numTrainDocs):        
         if trainCategory[i] == 1:
+            # 汇总侮辱性分类情况下的各词汇总数
             p1Num += trainMatrix[i]
+            # 总计侮辱性分类情况下的词汇总量
             p1Denom += sum(trainMatrix[i])
         else:
             p0Num += trainMatrix[i]
             p0Denom += sum(trainMatrix[i])
+    # 侮辱性情况下，各词汇出现的概率——p(w | c_1)，仍旧以向量形式展现
     p1Vect = p1Num / p1Denom
     p0Vect = p0Num / p0Denom
     return p0Vect, p1Vect, pAbusive

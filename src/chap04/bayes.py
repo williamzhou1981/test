@@ -59,6 +59,9 @@ def setOfWords2Vec(vocabList, inputSet):
     return returnVec
 
 '''
+    切记：这个方法只是展示算法的实现原理，不能直接使用
+        后续有个修改版的才能使用
+    
     下面的方法是利用已知的材料进行机器学习训练
     这个场景中贝叶斯公式如下：
         p(c_i | w) = p(w | c_i) p(c_i) / p(w)
@@ -69,7 +72,7 @@ def setOfWords2Vec(vocabList, inputSet):
                     即每个向量的分量彼此独立，每个分量可以单独参与计算，如下
                     p(w | c_i) = [p(w_0 | c_i),....p(w_n | c_i)]
                     这样简化计算过程，当然最后还是以向量的形式进行展示
-            p(w)直接用文档本身数量除以文档总数即可
+            p(w)——没有找到求解这个数值的代码！！！！
         本方法就是通过已有材料训练得出这几个参数值
     trainMatrix：把setOfWords2Vec当中产生的数字向量都放到一个列表中形成的矩阵
     trainCategory：文档类别列表——方法loadDataSet第二个返回值
@@ -78,7 +81,7 @@ def setOfWords2Vec(vocabList, inputSet):
 def trainNB0(trainMatrix, trainCategory):
     numTrainDocs = len(trainMatrix)
     numWords = len(trainMatrix[0])
-    # 侮辱性文档比例，反着看就是非侮辱性文档比例
+    # 侮辱性文档比例，反着看就是非侮辱性文档比例——p(c_1)
     pAbusive = sum(trainCategory) / float(numTrainDocs)
     
     p0Num = zeros(numWords)
@@ -94,10 +97,122 @@ def trainNB0(trainMatrix, trainCategory):
         else:
             p0Num += trainMatrix[i]
             p0Denom += sum(trainMatrix[i])
-    # 侮辱性情况下，各词汇出现的概率——p(w | c_1)，仍旧以向量形式展现
+    '''
+        侮辱性情况下，各词汇出现的概率——p(w | c_1)，仍旧以向量形式展现
+        形如  p(w0 |c1)    p(w1 | c1)      p(wn | c1) 
+            ([0,04166667, 0.04166667,....,0.125])
+        这个向量是针对完整的词汇表的，意义也很明确
+            即，侮辱性文档的情况下，每个词出现的概率
+    '''
     p1Vect = p1Num / p1Denom
     p0Vect = p0Num / p0Denom
     return p0Vect, p1Vect, pAbusive
+
+
+'''
+    参数和方法的基本说明和trainNB0一致
+    几处重要的修改见代码中说明
+'''
+def trainNB1(trainMatrix, trainCategory):
+    numTrainDocs = len(trainMatrix)
+    numWords = len(trainMatrix[0])
+    # 侮辱性文档比例，反着看就是非侮辱性文档比例——p(c_1)
+    pAbusive = sum(trainCategory) / float(numTrainDocs)
+    
+    '''
+        利用贝叶斯分类器进行文档分类的时候，会计算Πp(wi | c_x)
+        这样当任一个p(wi | c_x)为零的时候就会让最后乘积为零，误差很大
+        因此
+            1、改原有的zeros为ones
+            2、修改分明的初始值为2.0
+    '''
+    p0Num = ones(numWords)
+    p1Num = ones(numWords)
+    
+    p0Denom = 2.0
+    p1Denom = 2.0
+    for i in range(numTrainDocs):        
+        if trainCategory[i] == 1:
+            # 汇总侮辱性分类情况下的各词汇总数
+            p1Num += trainMatrix[i]
+            # 总计侮辱性分类情况下的词汇总量
+            p1Denom += sum(trainMatrix[i])
+        else:
+            p0Num += trainMatrix[i]
+            p0Denom += sum(trainMatrix[i])
+    '''
+        侮辱性情况下，各词汇出现的概率——p(w | c_1)，仍旧以向量形式展现
+        形如  p(w0 |c1)    p(w1 | c1)      p(wn | c1) 
+            ([0,04166667, 0.04166667,....,0.125])
+        这个向量是针对完整的词汇表的，意义也很明确
+            即，侮辱性文档的情况下，每个词出现的概率
+        如果按照这个向量进行返回，实际后续操作中产生的连续乘积会导致下溢出
+        即，使用了过多的极小数字相乘，结果会非常小，甚至于计算机只能把它表示为零
+        此时，采用对数处理的方式，ln(ab)=ln(a)+ln(b)这样的方式避免下溢出
+        修改就是在原来的矩阵运算的结果上直接使用log即可
+    '''
+    p1Vect = log(p1Num / p1Denom)
+    p0Vect = log(p0Num / p0Denom)
+    return p0Vect, p1Vect, pAbusive
+
+'''
+    朴素贝叶斯分类器
+'''
+def classifyNB(vec2Classify, p0Vec, p1Vec, pClass1):
+    '''
+        vec2Classify相当于是掩码，直接和对应的Vec相乘，只会留下对应的词汇的概率值
+        sum即是把向量的分量值全部进行了累加
+        之前对这些分量值都进行了对数化的处理，所以连加是没问题的，sum可以运行
+        同样，后面半截的log(pClass_i)也是进行累加的
+    '''
+    p1 = sum(vec2Classify * p1Vec) + log(pClass1)
+    p0 = sum(vec2Classify * p0Vec) + log(1.0 - pClass1) #此处只有两个分类
+    '''
+        个人的看法
+        因为只需要比较大小就可以确定分类，所以没必要进行p(w)的计算
+        对于两个（多个）值，在比较大小的情况下，同时除以一个相同的值对结果不会有影响
+        所以代码当中没有出现p(w)的计算
+    '''
+    if p1 > p0:
+        return 1
+    return 0
+
+'''
+    test it
+'''
+def testingNB():
+    listOPosts, listClasses = loadDataSet()
+    myVocabList = createVocabList(listOPosts)
+    trainMat = []
+    for postinDoc in listOPosts:
+        trainMat.append(setOfWords2Vec(myVocabList, postinDoc))
+    p0V, p1V, pAb = trainNB1(array(trainMat), array(listClasses))
+    testEntry = ['love', 'my', 'dalmation']
+    thisDoc = array(setOfWords2Vec(myVocabList, testEntry))
+    print(testEntry, ' classified as : ', classifyNB(thisDoc, p0V, p1V, pAb))
+    testEntry = ['stupid', 'garbage']
+    thisDoc = array(setOfWords2Vec(myVocabList, testEntry))
+    print(testEntry, ' classified as : ', classifyNB(thisDoc, p0V, p1V, pAb))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

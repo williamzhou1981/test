@@ -178,7 +178,7 @@ def classifyNB(vec2Classify, p0Vec, p1Vec, pClass1):
     return 0
 
 '''
-    test it
+    用论坛帖子的方式测试第一个朴素贝叶斯分类器
 '''
 def testingNB():
     listOPosts, listClasses = loadDataSet()
@@ -193,8 +193,70 @@ def testingNB():
     testEntry = ['stupid', 'garbage']
     thisDoc = array(setOfWords2Vec(myVocabList, testEntry))
     print(testEntry, ' classified as : ', classifyNB(thisDoc, p0V, p1V, pAb))
+    
+'''
+    文档词袋模型
+    上述的词汇总表是一个集合的模式，即只能表示某个词汇出现与否
+    词汇出现的次数没有得到体现
+    如果我们的判断需要引入词汇出现的次数，那么可以使用下面的词袋模型更加合适
+'''
+def bagOfWords2VecMN(vocabList, inputSet):
+    returnVec = [0] * len(vocabList)
+    for word in inputSet:
+        if word in vocabList:
+            returnVec[vocabList.index(word)] += 1
+    return returnVec
 
+'''
+    文件解析及完整的垃圾邮件测试函数
+'''
+def textParse(bigString):
+    import re
+    listOfTokens = re.split(r'\W*', bigString)
+    return [tok.lower() for tok in listOfTokens if len(tok) > 2]
 
+def spamTest():
+    docList = []
+    classList = []
+    fullText = []
+    # there are only 25 files in each folder
+    for i in range(1, 26):
+        wordList = textParse(open('email/spam/%d.txt' %i).read())
+        #print(i,": ", wordList)
+        docList.append(wordList)
+        fullText.extend(wordList)
+        classList.append(1)
+        # 小插曲，第23号文件有不可识别字符，重新编辑了一下就可以用了
+        wordList = textParse(open('email/ham/%d.txt' %i).read())
+        #print(i,": ", wordList)
+        docList.append(wordList)
+        fullText.append(wordList)
+        classList.append(0)
+    vocabList = createVocabList(docList)
+    '''
+        书上的代码直接使用range方法，但是在这个版本的python输出结果是元组
+        无法进行后续操作，程序报错
+        修改为list之后程序正常运行
+    '''
+    trainingSet = list(range(50))
+    testSet = []
+    # 随机构建训练集
+    for i in range(10):
+        randIndex = int(random.uniform(0, len(trainingSet)))
+        testSet.append(trainingSet[randIndex])
+        del(trainingSet[randIndex])
+    trainMat = []
+    trainClasses = []
+    for docIndex in trainingSet:
+        trainMat.append(setOfWords2Vec(vocabList, docList[docIndex]))
+        trainClasses.append(classList[docIndex])
+    p0V, p1V, pSpam = trainNB1(array(trainMat), array(trainClasses))
+    errorCount = 0
+    for docIndex in testSet:
+        wordVector = setOfWords2Vec(vocabList, docList[docIndex])
+        if classifyNB(array(wordVector), p0V, p1V, pSpam) != classList[docIndex] :
+            errorCount += 1
+    print("the error rate is: ", float(errorCount) / len(testSet))
 
 
 

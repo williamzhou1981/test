@@ -12,6 +12,16 @@ import logRgres
 ###############################
 
 # test bestfit by gradAscent
+#dataArr, labelMat = logRgres.loadDataSet()
+#weights = logRgres.gradAscent(dataArr, labelMat)
+#logRgres.plotBestFit(weights.getA()) # weights.getA() 把矩阵转化为数组
+
+#test stocGradAscent
 dataArr, labelMat = logRgres.loadDataSet()
-weights = logRgres.gradAscent(dataArr, labelMat)
-logRgres.plotBestFit(weights.getA()) # 把矩阵转化为数组
+weights = logRgres.stocGradAscent0(dataArr, labelMat)
+'''
+    此处因为在stocGradAscent当中已经有把矩阵转化为数组的处理了
+    不需要weights.getA()这样的转化操作，多了这个操作反而会出现异常如下：
+        AttributeError: 'numpy.ndarray' object has no attribute 'getA'
+'''
+logRgres.plotBestFit(weights)

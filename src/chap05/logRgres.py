@@ -70,8 +70,27 @@ def plotBestFit(weights):
     plt.show()
 
     
-
-
+'''
+    随机梯度上升算法
+    原梯度上升算法计算量很大，虽然结果很理想，但是性价比一般
+    除了计算次数很多之外，还有大量的矩阵计算
+    可以尝试简化一下，如果简化的结果可以接受，就没有必要那么复杂了
+    在本书的数据集基础上，实际效果比完全的梯度上升要差一些
+'''
+def stocGradAscent0(dataMatrix, classLabels):
+    '''
+        加这一行代码是解决这个异常：
+            TypeError: 'numpy.float64' object cannot be interpreted as an integer
+    '''
+    dataMatrix=array(dataMatrix)
+    m, n = shape(dataMatrix)
+    alpha = 0.01
+    weights = ones(n)
+    for i in range(m):
+        h = sigmoid(sum(dataMatrix[i] * weights))
+        error = classLabels[i] - h
+        weights = weights + alpha * error * dataMatrix[i]
+    return weights
 
 
 

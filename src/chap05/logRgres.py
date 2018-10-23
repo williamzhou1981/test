@@ -92,8 +92,33 @@ def stocGradAscent0(dataMatrix, classLabels):
         weights = weights + alpha * error * dataMatrix[i]
     return weights
 
-
-
+'''
+    改进的随机梯度上升算法
+    alpha的取值会随着迭代次数不断减小
+    加快回归系数的收敛
+'''
+def stocGradAscent1(dataMatrix, classLabels, numIter=150):
+    '''
+        加这一行代码是解决这个异常：
+            TypeError: 'numpy.float64' object cannot be interpreted as an integer
+    '''
+    dataMatrix=array(dataMatrix)
+    m, n = shape(dataMatrix)
+    weights = ones(n)
+    for j in range(numIter):
+        '''
+            python 3.x当中range不会直接返回数组，而是返回一个range对象
+            这是一个可iterate的对象，但是不能直接进行数组操作
+        '''
+        dataIndex = list(range(m))
+        for i in range(m):
+            alpha = 4 / (1.0 + j + i) + 0.01
+            randIndex = int(random.uniform(0, len(dataIndex)))
+            h = sigmoid(sum(dataMatrix[randIndex] * weights))
+            error = classLabels[randIndex] - h
+            weights = weights + alpha * error * dataMatrix[randIndex]
+            del(dataIndex[randIndex])
+    return weights
 
 
 

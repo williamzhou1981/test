@@ -27,11 +27,16 @@ import logRgres
 #logRgres.plotBestFit(weights)
 
 # test stocGradAscent with random alpha
-dataArr, labelMat = logRgres.loadDataSet()
-weights = logRgres.stocGradAscent1(dataArr, labelMat)
+#dataArr, labelMat = logRgres.loadDataSet()
+#weights = logRgres.stocGradAscent1(dataArr, labelMat)
 '''
     此处因为在stocGradAscent当中已经有把矩阵转化为数组的处理了
     不需要weights.getA()这样的转化操作，多了这个操作反而会出现异常如下：
         AttributeError: 'numpy.ndarray' object has no attribute 'getA'
 '''
-logRgres.plotBestFit(weights)
+#logRgres.plotBestFit(weights)
+
+# test the last example in this chapter
+logRgres.multiTest()
+
+

@@ -21,7 +21,7 @@ def loadDataSet():
 
 def sigmoid(inX):
     # return 1.0 / (1 + exp(-inX))    #这个exp是numpy里面的，可以矩阵运算
-    return longfloat(1.0 / (1 + exp(-inX))) #防止溢出
+    return longfloat(1.0 / (1 + exp(-inX))) #防止溢出,但是实际上还是溢出了。。。
 
 '''
     本章节省略了大量的数学推导过程
@@ -153,9 +153,8 @@ def colicTest():
         lineArr = []
         for i in range(21):
             lineArr.append(float(currLine[i]))
-        if int(classifyVector(array(lineArr), trainWeights)):
-            int(currLine[21])
-            errorCount -= 1
+        if int(classifyVector(array(lineArr), trainWeights)) != int(currLine[21]):
+            errorCount += 1
     errorRate = (float(errorCount) / numTestVec)
     print("the error rate of this test is: %f" % errorRate)
     return errorRate
